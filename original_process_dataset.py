@@ -60,9 +60,9 @@ def assign_piece():
 	while chosen in done:
 		chosen = random.choice(aux1)
 	col = aux1.index(chosen)
-	print("The chosen is:", chosen)
+	du0_print("The chosen is:", chosen)
 	done.append(chosen)
-	print("Already done:", done)
+	du0_print("Already done:", done)
 
 	return col
 
@@ -72,39 +72,39 @@ def process_piece(col):
 	global input_path
 	global output_path
 	global dataset_file
-	print("########################### SPLITTING COLUMN "+str(col)+" #################################")
+	du0_print("Splitting column", str(col))
 	time_start_process_piece = time.time()
 
 	data = pd.read_csv(input_path+os.sep+dataset_file, sep=',', usecols=[col], squeeze=True, encoding='utf-8', header=None)
-	print(data[0:5])
+	du0_print(list(data[0:5]))
 
 	if int(col)==1 or int(col)==10 or int(col)==11:
 		data = stats.zscore(data)
 		data = pd.DataFrame(data)
-		print("Processed Data:", data[0:5])
+		du0_print("Processed Data:", list(data[0:5]))
 		data.dropna(inplace=True)
 		data.to_csv(output_path + os.sep + str(col), header=False, index=False)
-		print("Processing time", time.time()-time_start_process_piece)
+		du0_print("Processing time", time.time()-time_start_process_piece)
 
 	elif int(col)==0 or int(col)==8:
-		print("Column not to be processed")
+		du0_print("Column not to be processed")
 
 	elif int(col)==12:
 		data = data.replace(["dos", "scan11", "scan44", "nerisbotnet", "blacklist", "anomaly-udpscan",\
 							 "anomaly-sshscan", "anomaly-spam", "background"], [0, 1, 1, 2, 3, 4, 4, 5, 6])
-		print("Processed Data:", data[0:5])
+		du0_print("Processed Data:", list(data[0:5]))
 		data.dropna(inplace=True)
 		data.to_csv(output_path + os.sep + str(col), header=False, index=False)
-		print("Processing time", time.time()-time_start_process_piece)
+		du0_print("Processing time", time.time()-time_start_process_piece)
 
 	else:
 		le = preprocessing.LabelEncoder()
 		data = le.fit_transform(data)
 		data = pd.DataFrame(data)
-		print("Processed Data:", data[0:5])
+		du0_print("Processed Data:", list(data[0:5]))
 		data.dropna(inplace=True)
 		data.to_csv(output_path + os.sep + str(col), header=False, index=False)
-		print("Processing time", time.time()-time_start_process_piece)
+		du0_print("Processing time", time.time()-time_start_process_piece)
 
 
 def create_final_dataset():
@@ -113,12 +113,12 @@ def create_final_dataset():
 	files = os.listdir(output_path)
 	files = list(map(int,files))
 	files.sort()
-	print(files)
+	du0_print(files)
 
 	for fname in files:
 		piece = pd.read_csv(output_path + os.sep + str(fname), sep=",", squeeze=True)
 		dataset = pd.concat([dataset,piece], axis=1)
-		print(dataset)
+		du0_print(dataset)
 
 	piece = None
 	dataset.to_csv(output_path + os.sep + "FINALDATASET.csv", header=False, index=False)
@@ -132,22 +132,26 @@ def create_final_dataset():
 def main():
 	global done
 	total_time_start = time.time()
-	print("################# STARTING CLOUDBOOK-BASED DATASET PREPROCESSING #################")
+	du0_print("\n\n #################### STARTING CLOUDBOOK-BASED DATASET PREPROCESSING #################### \n")
 
 	# Assign tasks
 	cols = []
 	for i in range(13):
 		col = assign_piece()
 		cols.append(col)
+	du0_print("\n\n #################### ALL PIECES ASSIGNED #################### \n")
 
 	# Process the columns in parallel
 	for col in cols:
 		process_piece(col)
+	du0_print("\n\n #################### ALL PIECES ARE BEING PROCESSED #################### \n")
 
 	#__CLOUDBOOK:SYNC__
+	du0_print("\n\n #################### ALL PIECES PROCESSED #################### \n")
+
 	create_final_dataset()
-	print("Total time", time.time()-total_time_start)
-	print("################# CLOUDBOOK DONE #################")
+	du0_print("Total time", time.time()-total_time_start)
+	du0_print("\n\n #################### CLOUDBOOK DONE #################### \n")
 
 
 #__CLOUDBOOK:BEGINREMOVE__
