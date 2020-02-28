@@ -8,7 +8,6 @@
 
 
 
-
 #####   IMPORTS   #####
 
 # System
@@ -23,7 +22,6 @@ import json
 import pandas as pd
 from sklearn import preprocessing
 from scipy import stats
-
 
 
 
@@ -42,12 +40,40 @@ dataset_file = "100dataset.csv"
 
 
 
-
 #####   FUNCTIONS   #####
 
 #__CLOUDBOOK:DU0__
 def du0_print(*args, **kwargs):
 	print(*args, **kwargs)
+
+
+#__CLOUDBOOK:DU0__
+def du0_ask_for_input_file():
+	global input_path
+	global output_path
+	global dataset_file
+
+	if not os.path.exists(input_path):
+		print("The input path ("+input_path+") does not exist. Creating it...")
+		os.mkdir(input_path)
+	if not os.path.exists(output_path):
+		print("The output path ("+output_path+") does not exist. Creating it...")
+		os.mkdir(output_path)
+
+	print("Write the input file you want to process (from .../input/).")
+	print("The file '100dataset.csv' will be used by default.")
+	input_file = None
+	while not input_file:
+		input_file = input("File (include extension): ")
+		if input_file=="":
+			input_file = dataset_file
+		if not os.path.exists(input_path+os.sep+input_file):
+			print("The file "+input_path+os.sep+input_file+" does not exist. Try again.")
+			input_file = None
+	
+	print("Input file successfully set.")
+	dataset_file = input_file
+	return
 
 
 # This function assigns a single column to be processed.
@@ -72,6 +98,7 @@ def process_piece(col):
 	global input_path
 	global output_path
 	global dataset_file
+
 	du0_print("Splitting column", str(col))
 	time_start_process_piece = time.time()
 
@@ -125,30 +152,34 @@ def create_final_dataset():
 
 
 
-
 #####   MAIN FUNCTION   #####
 
 #__CLOUDBOOK:MAIN__
 def main():
 	global done
+	du0_print("\n\n #################### CLOUDBOOK-BASED DATASET PREPROCESSING PROGRAM #################### \n")
+	du0_ask_for_input_file()
+
+	du0_print("\n\n ########## START PREPROCESSING ########## \n")
 	total_time_start = time.time()
-	du0_print("\n\n #################### STARTING CLOUDBOOK-BASED DATASET PREPROCESSING #################### \n")
 
 	# Assign tasks
+	du0_print("\n\n ########## START PIECES ASSIGNMENT ########## \n")
 	cols = []
 	for i in range(13):
 		col = assign_piece()
 		cols.append(col)
-	du0_print("\n\n #################### ALL PIECES ASSIGNED #################### \n")
+	du0_print("All pieces have been assigned")
 
 	# Process the columns in parallel
+	du0_print("\n\n ########## START PROCESS ########## \n")
 	for col in cols:
 		process_piece(col)
-	du0_print("\n\n #################### ALL PIECES ARE BEING PROCESSED #################### \n")
 
 	#__CLOUDBOOK:SYNC__
-	du0_print("\n\n #################### ALL PIECES PROCESSED #################### \n")
+	du0_print("All pieces have been processed")
 
+	du0_print("\n\n ########## CREATING OUTPUT FILE ########## \n")
 	create_final_dataset()
 	du0_print("Total time", time.time()-total_time_start)
 	du0_print("\n\n #################### CLOUDBOOK DONE #################### \n")
