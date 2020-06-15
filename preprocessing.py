@@ -68,7 +68,7 @@ def du0_ask_for_input_file():
 		if input_file=="":
 			input_file = dataset_file
 		if not os.path.exists(input_path+os.sep+input_file):
-			print("The file "+input_path+os.sep+input_file+" does not exist. Try again.")
+			print("The file "+input_path+os.sep+input_file+" does not exist. Try again.\n")
 			input_file = None
 	
 	print("Input file successfully set.")
@@ -137,15 +137,24 @@ def process_piece(col):
 def create_final_dataset():
 	global output_path
 	dataset = pd.DataFrame()
-	files = os.listdir(output_path)
-	files = list(map(int,files))
-	files.sort()
-	du0_print(files)
 
-	for fname in files:
-		piece = pd.read_csv(output_path + os.sep + str(fname), sep=",", squeeze=True)
+	# Use only number files (columns) and exclude any other file
+	files = os.listdir(output_path)
+	int_files = []
+	for file in files:
+		try:
+			int_file = int(file)
+			int_files.append(int_file)
+		except:
+			du0_print("Ommitting file", file)
+
+	int_files.sort()
+	du0_print(int_files)
+
+	for int_file in int_files:
+		piece = pd.read_csv(output_path + os.sep + str(int_file), sep=",", squeeze=True)
 		dataset = pd.concat([dataset,piece], axis=1)
-		du0_print(dataset)
+		du0_print(list(dataset))
 
 	piece = None
 	dataset.to_csv(output_path + os.sep + "FINALDATASET.csv", header=False, index=False)
@@ -157,14 +166,24 @@ def create_final_dataset():
 #__CLOUDBOOK:MAIN__
 def main():
 	global done
-	du0_print("\n\n #################### CLOUDBOOK-BASED DATASET PREPROCESSING PROGRAM #################### \n")
+
+	try:
+		__CLOUDBOOK__ # If this does not exist, we are not in cloudbook
+		in_cloudbook = True
+	except Exception:
+		in_cloudbook = False
+
+	if in_cloudbook:
+		du0_print("\n\n ####################   CLOUDBOOK-BASED DATASET PREPROCESSING PROGRAM   #################### \n")
+	else:
+		du0_print("\n\n ####################   DATASET PREPROCESSING PROGRAM (ONE MACHINE)   #################### \n")
 	du0_ask_for_input_file()
 
-	du0_print("\n\n ########## START PREPROCESSING ########## \n")
+	du0_print("\n\n ########## START TIMER ########## \n")
 	total_time_start = time.time()
 
 	# Assign tasks
-	du0_print("\n\n ########## START PIECES ASSIGNMENT ########## \n")
+	du0_print("\n\n ##########   START PIECES ASSIGNMENT   ########## \n")
 	cols = []
 	for i in range(13):
 		col = assign_piece()
@@ -172,17 +191,20 @@ def main():
 	du0_print("All pieces have been assigned")
 
 	# Process the columns in parallel
-	du0_print("\n\n ########## START PROCESS ########## \n")
+	du0_print("\n\n ##########   START PREPROCESSING   ########## \n")
 	for col in cols:
 		process_piece(col)
 
 	#__CLOUDBOOK:SYNC__
 	du0_print("All pieces have been processed")
 
-	du0_print("\n\n ########## CREATING OUTPUT FILE ########## \n")
+	du0_print("\n\n ##########   CREATING OUTPUT FILE   ########## \n")
 	create_final_dataset()
 	du0_print("Total time", time.time()-total_time_start)
-	du0_print("\n\n #################### CLOUDBOOK DONE #################### \n")
+	if in_cloudbook:
+		du0_print("\n\n ####################   CLOUDBOOK DONE   #################### \n")
+	else:
+		du0_print("\n\n ####################   DONE   #################### \n")
 
 
 #__CLOUDBOOK:BEGINREMOVE__
